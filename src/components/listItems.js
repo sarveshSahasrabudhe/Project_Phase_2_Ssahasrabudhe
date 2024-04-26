@@ -21,6 +21,10 @@ function MainListItems({ handleOptionSelection }) {
   const handleSearchClick = () => {
     navigate('/search-queries'); // Correct usage of navigate to change routes
   };
+
+  const handleHybridSearchClick = () => {
+    navigate('/hybrid-queries'); // Navigate to the hybrid queries page
+  };
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -89,7 +93,7 @@ function MainListItems({ handleOptionSelection }) {
       </Tooltip>
       
       <Tooltip title="Hybrid-Search Queries" placement="right" arrow>
-        <ListItemButton>
+      <ListItemButton onClick={handleHybridSearchClick}>
           <ListItemIcon>
             <TrendingUpIcon />
           </ListItemIcon>
