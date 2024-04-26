@@ -11,11 +11,16 @@ import SearchIcon from '@mui/icons-material/Search'; // For Fuzzy/Exact-Search Q
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'; // Alternative for Hybrid-Search Queries
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'; // Dropdown icon
 
-import { useHistory } from 'react-router-dom'; // Import useHistory
+import { useNavigate } from 'react-router-dom'; // Import useHistory
 
 function MainListItems({ handleOptionSelection }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   
+  const navigate = useNavigate(); // useNavigate hook for navigation
+
+  const handleSearchClick = () => {
+    navigate('/search-queries'); // Correct usage of navigate to change routes
+  };
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -75,7 +80,7 @@ function MainListItems({ handleOptionSelection }) {
       </Menu>
       
       <Tooltip title="Fuzzy/Exact-Search Queries" placement="right" arrow>
-        <ListItemButton>
+        <ListItemButton onClick={handleSearchClick}>
           <ListItemIcon>
             <SearchIcon />
           </ListItemIcon>
