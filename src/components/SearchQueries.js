@@ -19,11 +19,12 @@ function SearchQueries() {
   useEffect(() => {
     if (!selectedQuery) return;
 
+    const jsonFileUrl = `/data/Amazon_Appliances_${selectedQuery}.json`;
     const fetchData = async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`/data/Amazon_Appliances_${selectedQuery}.json`);
+            const response = await axios.get(jsonFileUrl);
             setData(response.data);
         } catch (error) {
             setError(error.message);
@@ -33,30 +34,28 @@ function SearchQueries() {
     };
 
     fetchData();
-}, [selectedQuery]);
-
+  }, [selectedQuery]);
 
   const handleQuerySelection = (queryType) => {
-    setSelectedQuery(queryType);
+    setSearchQuery("");  // Clear previous searches
     switch (queryType) {
         case 'Metadata':
+        case 'Categories':
+            setSelectedQuery('Metadata'); // Fetch Metadata for both products and categories
             setSearchPlaceholder("Search by Product Description or Title");
             setSearchDescription("Type a product description or title to search:");
             break;
         case 'Reviews':
+            setSelectedQuery('Reviews'); // Fetch Reviews for reviewer names
             setSearchPlaceholder("Search by Reviewer Name");
             setSearchDescription("Type a reviewer name to search:");
             break;
-        case 'Categories':
-            setSearchPlaceholder("Search by Product Categories");
-            setSearchDescription("Type a product category to search:");
-            break;
         default:
+            setSelectedQuery("");
             setSearchPlaceholder("");
             setSearchDescription("");
     }
-};
-
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -70,35 +69,28 @@ function SearchQueries() {
   const filterData = () => {
     if (!data) return [];
 
-    if (selectedQuery === 'Reviews') {
-        return data.filter(item => {
-            // Ensure that reviewerName is defined before calling toLowerCase()
-            return item.reviewerName && item.reviewerName.toLowerCase().includes(searchQuery.toLowerCase());
-        });
-    } else if (selectedQuery === 'Metadata') {
-        return data.filter(item => {
-            // Check that title and description exist and perform a case insensitive search
-            const titleMatch = item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase());
-            const descriptionMatch = item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase());
-            return titleMatch || descriptionMatch;
-        });
-    } else if (selectedQuery === 'Categories') {
-        // Handle category searching if implemented
-        return data.filter(item => {
-            const categoriesMatch = item.categories && JSON.parse(item.categories.replace(/'/g, '"')).some(catArray => 
-                catArray.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))
+    switch (selectedQuery) {
+        case 'Reviews':
+            return data.filter(item =>
+                item.reviewerName?.toLowerCase().includes(searchQuery.toLowerCase())
             );
-            return categoriesMatch;
-        });
+        case 'Metadata':
+            return data.filter(item => {
+                const titleMatch = item.title?.toLowerCase().includes(searchQuery.toLowerCase());
+                const descriptionMatch = item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+                const categoriesMatch = selectedQuery === 'Categories' && item.categories && JSON.stringify(item.categories).toLowerCase().includes(searchQuery.toLowerCase());
+                return titleMatch || descriptionMatch || categoriesMatch;
+            });
+        default:
+            return []; // No data to display if the query type isn't specified
     }
-
-    return []; // Default case to return empty array if no valid query type is selected
-};
+  };
 
   const renderTable = () => {
     if (!selectedQuery) return null;
 
     const filteredData = filterData();
+    const isReviewSearch = selectedQuery === 'Reviews';
 
     return (
       <Paper>
@@ -133,21 +125,43 @@ function SearchQueries() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Title</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Image</TableCell>
-                <TableCell>Category</TableCell>
+                {isReviewSearch ? (
+                  <>
+                    <TableCell>Reviewer Name</TableCell>
+                    <TableCell>Review Text</TableCell>
+                    <TableCell>Overall Rating</TableCell>
+                    <TableCell>Review Time</TableCell>
+                  </>
+                ) : (
+                  <>
+                    <TableCell>Title</TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell>Image</TableCell>
+                    <TableCell>Category</TableCell>
+                  </>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((item, index) => (
                 <TableRow key={index}>
-                  <TableCell>{item.title}</TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell>
-                    <img src={item.imUrl} alt={item.title} style={{ width: 100 }} />
-                  </TableCell>
-                  <TableCell>{item.categories && JSON.parse(item.categories.replace(/'/g, '"')).map(cat => cat.join(", ")).join(" | ")}</TableCell>
+                  {isReviewSearch ? (
+                    <>
+                      <TableCell>{item.reviewerName}</TableCell>
+                      <TableCell>{item.reviewText}</TableCell>
+                      <TableCell>{item.overall}</TableCell>
+                      <TableCell>{new Date(item.reviewTime * 1000).toLocaleString()}</TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell>{item.title}</TableCell>
+                      <TableCell>{item.description}</TableCell>
+                      <TableCell>
+                        <img src={item.imUrl} alt={item.title} style={{ width: 100 }} />
+                      </TableCell>
+                      <TableCell>{item.categories && JSON.parse(item.categories.replace(/'/g, '"')).map(cat => cat.join(", ")).join(" | ")}</TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
