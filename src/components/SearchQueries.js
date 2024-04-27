@@ -37,11 +37,11 @@ function SearchQueries() {
   }, [selectedQuery]);
 
   const handleQuerySelection = (queryType) => {
-    setSearchQuery("");  // Clear previous searches
+    setSearchQuery("");  
     switch (queryType) {
         case 'Metadata':
         case 'Categories':
-            setSelectedQuery('Metadata'); // Fetch Metadata for both products and categories
+            setSelectedQuery('Metadata');
             setSearchPlaceholder("Search by Product Description or Title");
             setSearchDescription("Type a product description or title to search:");
             break;
